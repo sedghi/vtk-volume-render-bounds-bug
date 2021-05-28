@@ -2,10 +2,8 @@ import vtk
 from vtk.util import numpy_support
 
 
-def main():
+def main(file_name, interpolation):
     colors = vtk.vtkNamedColors()
-
-    file_name = 'FullHead.mhd'
 
     colors.SetColor('BkgColor', [51, 77, 102, 255])
 
@@ -32,20 +30,19 @@ def main():
     reader.Update()
     data = reader.GetOutput()
 
-    # todo1: if loading the fullHead.mhd uncomment the following lines of code to manipulate first and last slice
-    # todo1: for dicom.mhd you don't need to do this
-    _extent = reader.GetDataExtent()
-    ConstPixelDims = [_extent[1]-_extent[0]+1, _extent[3]-_extent[2]+1, _extent[5]-_extent[4]+1]
+    if file_name == "FullHead.mhd":
+        _extent = reader.GetDataExtent()
+        ConstPixelDims = [_extent[1]-_extent[0]+1, _extent[3]-_extent[2]+1, _extent[5]-_extent[4]+1]
 
-    arrayData = data.GetPointData().GetArray(0)
-    ArrayDicom = numpy_support.vtk_to_numpy(arrayData)
-    
-    ArrayDicom[0:ConstPixelDims[0]*ConstPixelDims[1]] = 3000
-    ArrayDicom[len(ArrayDicom) - ConstPixelDims[0]*ConstPixelDims[1]:-1] = 3000
+        arrayData = data.GetPointData().GetArray(0)
+        ArrayDicom = numpy_support.vtk_to_numpy(arrayData)
+        
+        ArrayDicom[0:ConstPixelDims[0]*ConstPixelDims[1]] = 3000
+        ArrayDicom[len(ArrayDicom) - ConstPixelDims[0]*ConstPixelDims[1]:-1] = 3000
 
-    vtkArray = numpy_support.numpy_to_vtk(ArrayDicom)
-    data.GetPointData().AddArray(vtkArray)
-    # todo1:
+        vtkArray = numpy_support.numpy_to_vtk(ArrayDicom)
+        data.GetPointData().AddArray(vtkArray)
+        
 
 
 
@@ -70,10 +67,16 @@ def main():
     # The opacity transfer function is used to control the opacity
     # of different tissue types.
     volume_scalar_opacity = vtk.vtkPiecewiseFunction()
-    volume_scalar_opacity.AddPoint(0, 0.00)
-    volume_scalar_opacity.AddPoint(500, 0.15)
-    volume_scalar_opacity.AddPoint(1000, 0.15)
-    volume_scalar_opacity.AddPoint(1150, 0.85)
+
+    if file_name == "FullHead.mhd":
+        volume_scalar_opacity.AddPoint(0, 0.00)
+        volume_scalar_opacity.AddPoint(500, 0.15)
+        volume_scalar_opacity.AddPoint(1000, 0.15)
+        volume_scalar_opacity.AddPoint(1150, 0.85)
+    else: 
+        # test dicom
+        volume_scalar_opacity.AddPoint(0, 0.00)
+        volume_scalar_opacity.AddPoint(255, 0.85)
 
     # The gradient opacity function is used to decrease the opacity
     # in the 'flat' regions of the volume while maintaining the opacity
@@ -99,12 +102,16 @@ def main():
     volume_property = vtk.vtkVolumeProperty()
     volume_property.SetColor(volume_color)
     volume_property.SetScalarOpacity(volume_scalar_opacity)
+
+    if file_name == "FullHead.mhd":
+        volume_property.SetGradientOpacity(volume_gradient_opacity)
     
-    # todo2: 
-    # volume_property.SetGradientOpacity(volume_gradient_opacity)
-    volume_property.SetInterpolationTypeToNearest()
-    # volume_property.SetInterpolationTypeToLinear()
-    # todo2:
+    
+    if interpolation == "linear":
+        volume_property.SetInterpolationTypeToLinear()
+    else:
+        volume_property.SetInterpolationTypeToNearest()
+    
 
     volume_property.ShadeOn()
     volume_property.SetAmbient(0.4)
@@ -144,4 +151,7 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    interpolation = "linear" # from ["linear", "nearest"]
+    file_name = "dicom.mhd" # from ["FullHead.mhd", "dicom.mhd"]
+
+    main(file_name, interpolation)
