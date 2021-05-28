@@ -32,6 +32,8 @@ def main():
     reader.Update()
     data = reader.GetOutput()
 
+    # todo1: if loading the fullHead.mhd uncomment the following lines of code to manipulate first and last slice
+    # todo1: for dicom.mhd you don't need to do this
     _extent = reader.GetDataExtent()
     ConstPixelDims = [_extent[1]-_extent[0]+1, _extent[3]-_extent[2]+1, _extent[5]-_extent[4]+1]
 
@@ -43,6 +45,11 @@ def main():
 
     vtkArray = numpy_support.numpy_to_vtk(ArrayDicom)
     data.GetPointData().AddArray(vtkArray)
+    # todo1:
+
+
+
+
 
     # The volume will be displayed by ray-cast alpha compositing.
     # A ray-cast mapper is needed to do the ray-casting.
@@ -92,8 +99,13 @@ def main():
     volume_property = vtk.vtkVolumeProperty()
     volume_property.SetColor(volume_color)
     volume_property.SetScalarOpacity(volume_scalar_opacity)
-    volume_property.SetGradientOpacity(volume_gradient_opacity)
+    
+    # todo2: 
+    # volume_property.SetGradientOpacity(volume_gradient_opacity)
     volume_property.SetInterpolationTypeToNearest()
+    # volume_property.SetInterpolationTypeToLinear()
+    # todo2:
+
     volume_property.ShadeOn()
     volume_property.SetAmbient(0.4)
     volume_property.SetDiffuse(0.6)
